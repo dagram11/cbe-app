@@ -1,0 +1,6 @@
+{
+  "name": "CBE Mobile Banking",
+  "description": "Commercial Bank of Ethiopia Mobile Banking Application",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

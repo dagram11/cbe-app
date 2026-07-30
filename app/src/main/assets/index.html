@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CBE Mobile Banking</title>
+    <!-- FontAwesome 6 for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* BASE & UNIFIED COLOR SYSTEM */
+        :root {
+            --cbe-purple: #6c21b9; 
+            --cbe-purple-dark: #550d96;
+            --cbe-purple-light: #f3e8ff;
+
+            --cbe-gold: #c28e0e;
+            --cbe-gold-light: #eab308;
+            --bg-light: #f4f5f8;
+            --card-dark: #121824;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #111827; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        /* App Canvas Container */
+        #app {
+            position: relative;
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            max-height: 892px;
+            background: var(--bg-light);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            border-radius: 20px;
+        }
+
+        /* Utilities */
+        .hidden { display: none !important; }
+        .purple-btn { background: var(--cbe-purple); color: white; border: none; border-radius: 99px; padding: 16px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: background 0.2s; }
+        .purple-btn:active { background: var(--cbe-purple-dark); }
+        .gold-btn { background: var(--cbe-gold); color: white; border: none; border-radius: 99px; padding: 16px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .gold-btn:active { background: #a37609; }
+
+        /* Screen Wrapper */
+        .screen { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            overflow-y: auto; 
+            background: var(--bg-light); 
+            z-index: 1; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---------------------------------------------------- */
+        /* SCREEN 1: LOGIN */
+        /* ---------------------------------------------------- */
+        #screen-login { background: #f8f9fa; padding: 20px; align-items: center; justify-content: space-between; }
+        .top-navbar { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .icon-circle-btn { width: 38px; height: 38px; border-radius: 50%; background: #ffffff; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; color: #4b5563; font-size: 15px; cursor: pointer; }
+        .lang-pill { background: #ffffff; border: 1px solid #e5e7eb; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; color: #374151; display: flex; align-items: center; gap: 6px; }
+
+        .login-body { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 10px; }
+        
+        /* CBE LOGO PLACEHOLDER 1: LOGIN PAGE */
+        .cbe-emblem { width: 85px; height: 85px; position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+        .cbe-emblem-img { width: 100%; height: 100%; object-fit: contain; }
+
+        .brand-amharic { font-size: 20px; font-weight: 700; color: #b8860b; margin-bottom: 4px; }
+        .brand-english { font-size: 13px; font-weight: 700; color: #374151; letter-spacing: 0.8px; margin-bottom: 20px; }
+        .welcome-text { font-size: 16px; color: #6b7280; margin-bottom: 20px; font-weight: 400; }
+
+        .pin-box { width: 100%; background: #fff; border: 1.5px solid #d1d5db; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 12px; transition: border 0.2s; cursor: pointer; margin-bottom: 20px; }
+        .pin-box.active-focused { border-color: var(--cbe-purple) !important; box-shadow: 0 0 0 3px rgba(108, 33, 185, 0.15); }
+        .pin-box i { color: #d4af37; font-size: 18px; }
+        .pin-box input { border: none; outline: none; font-size: 18px; width: 100%; letter-spacing: 4px; color: #111827; background: transparent; cursor: pointer; }
+
+        .biometrics-btn { width: 62px; height: 62px; border-radius: 50%; background: var(--cbe-purple); border: none; color: white; font-size: 26px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; cursor: pointer; box-shadow: 0 6px 16px rgba(108, 33, 185, 0.3); }
+        .biometrics-label { font-size: 11px; font-weight: 700; color: #374151; letter-spacing: 0.5px; margin-bottom: 20px; }
+
+        .login-footer-text { font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 10px; }
+
+        .inline-numpad { width: 100%; background: #ffffff; border-top: 1px solid #e5e7eb; padding: 15px 20px 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 25px rgba(0,0,0,0.05); }
+        .numpad-btn { background: #f3f4f6; border: none; border-radius: 14px; padding: 16px; font-size: 22px; font-weight: 600; color: #111827; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .numpad-btn:active { background: #e5e7eb; }
+        .numpad-btn.backspace { color: #ef4444; background: #fee2e2; }
+        .numpad-btn.confirm { background: var(--cbe-purple); color: white; }
+
+        /* ---------------------------------------------------- */
+        /* SCREEN 2: DASHBOARD & REPLICATED BANNER STYLES */
+        /* ---------------------------------------------------- */
+        #screen-dashboard { padding-bottom: 150px; }
+        .dash-header-bg { background: var(--cbe-purple); padding: 15px 20px 65px 20px; color: white; }
+        .dash-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .dash-user-info { display: flex; align-items: center; gap: 10px; }
+        .dash-user-info i { font-size: 22px; }
+        .dash-user-info span { font-size: 14px; line-height: 1.2; }
+        .dash-right-tools { display: flex; align-items: center; gap: 12px; }
+        .dash-right-tools i { font-size: 18px; cursor: pointer; }
+
+        .banner-container-wrapper {
+            margin: -50px 15px 15px 15px;
+        }
+
+        .banner {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 22px;
+            background: #131318;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+        }
+
+        /* BANNER BACKGROUND IMAGE PLACEHOLDER 2 */
+        .banner-bg-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 0.85;
+        }
+
+        .banner .logo {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .banner-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .banner .title {
+            position: absolute;
+            left: 58px;
+            top: 14px;
+            color: #d7c26b;
+            font-size: 15px;
+            font-weight: 700;
+            z-index: 1;
+        }
+
+        .banner .subtitle {
+            position: absolute;
+            left: 58px;
+            top: 34px;
+            color: #d6c06a;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            z-index: 1;
+        }
+
+        .banner .balance {
+            position: absolute;
+            width: 100%;
+            top: 72px;
+            text-align: center;
+            color: #ffffff;
+            font-size: 32px;
+            letter-spacing: 4px;
+            font-weight: 300;
+            z-index: 1;
+        }
+
+        .banner .balance span {
+            font-size: 22px;
+            letter-spacing: 0;
+            margin-left: 6px;
+        }
+
+        .banner .eye {
+            position: absolute;
+            right: 18px;
+            top: 76px;
+            color: #d5d5d5;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 2;
+            user-select: none;
+        }
+
+        .banner .account {
+            position: absolute;
+            bottom: 46px;
+            width: 100%;
+            text-align: center;
+            color: #e0cb72;
+            font-size: 16px;
+            letter-spacing: 2px;
+            font-weight: 300;
+            z-index: 1;
+        }
+
+        .banner .chip {
+            position: absolute;
+            right: 22px;
+            bottom: 44px;
+            width: 18px;
+            height: 24px;
+            border: 2px solid #bdbdbd;
+            border-radius: 3px;
+            z-index: 1;
+        }
+
+        .banner .chip:before {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: #7c7c7c;
+        }
+
+        .banner .date {
+            position: absolute;
+            bottom: 18px;
+            width: 100%;
+            text-align: center;
+            color: #bdbdbd;
+            font-size: 12px;
+            z-index: 1;
+        }
+
+        .quick-actions-bar { display: flex; justify-content: space-between; background: #ffffff; margin: 0 15px 15px 15px; padding: 15px 10px; border-radius: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .qa-item { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #374151; cursor: pointer; flex: 1; }
+        .qa-icon-box { width: 44px; height: 44px; border-radius: 50%; background: var(--cbe-purple-light); color: var(--cbe-purple); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+        .dash-grid-container { padding: 0 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .grid-card { background: #ffffff; border-radius: 18px; padding: 18px 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); cursor: pointer; transition: transform 0.1s; }
+        .grid-card:active { transform: scale(0.98); }
+        .grid-card-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .grid-card-title { font-size: 14px; font-weight: 700; color: #111827; }
+        .grid-card-sub { font-size: 11px; color: #6b7280; }
+
+        .floating-scan-btn { 
+            position: absolute; 
+            bottom: 68px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: var(--cbe-purple); 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 99px; 
+            font-weight: 600; 
+            font-size: 14px; 
+            box-shadow: 0 8px 20px rgba(108, 33, 185, 0.4); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            z-index: 11; 
+            cursor: pointer; 
+        }
+
+        .bottom-nav-bar { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: #ffffff; 
+            border-top: 1px solid #e5e7eb; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            padding: 10px 0; 
+            z-index: 10; 
+        }
+        .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: #6b7280; cursor: pointer; padding: 4px 16px; border-radius: 20px; }
+        .nav-tab.active { background: var(--cbe-purple-light); color: var(--cbe-purple); font-weight: 700; }
+        .nav-tab i { font-size: 18px; }
+
+        /* ---------------------------------------------------- */
+        /* SCREEN 3 & 4: CBE TRANSFER FLOW */
+        /* ---------------------------------------------------- */
+        .purple-header-bar { background: var(--cbe-purple); color: white; padding: 18px 20px; display: flex; align-items: center; gap: 15px; }
+        .purple-header-bar i { font-size: 20px; cursor: pointer; }
+        .purple-header-bar h2 { font-size: 18px; font-weight: 600; }
+
+        .transfer-body { padding: 15px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+        .card-from-account { background: #1e293b; color: white; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+        .input-pill-field { background: #ffffff; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .input-pill-field i.left-icon { color: var(--cbe-purple); font-size: 18px; }
+        .input-pill-field input { border: none; outline: none; width: 100%; font-size: 15px; color: #111827; background: transparent; }
+        .input-pill-field i.right-icon { color: #9ca3af; font-size: 18px; cursor: pointer; }
+
+        .recent-transfers-box { margin-top: 10px; background: #ffffff; border-radius: 16px; padding: 15px; }
+        .tabs-header { display: flex; gap: 20px; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 10px; font-size: 14px; font-weight: 600; }
+        .tab-item { color: #6b7280; cursor: pointer; position: relative; }
+        .tab-item.active { color: var(--cbe-purple); }
+        .tab-item.active::after { content: ''; position: absolute; bottom: -11px; left: 0; width: 100%; height: 3px; background: var(--cbe-purple); border-radius: 3px; }
+
+        .recipient-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+        .recipient-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--cbe-purple-light); color: var(--cbe-purple); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .recipient-details { flex: 1; margin-left: 12px; }
+        .recipient-details h5 { font-size: 14px; font-weight: 600; color: #111827; }
+        .recipient-details p { font-size: 12px; color: #6b7280; margin-top: 2px; }
+        .recipient-actions { display: flex; align-items: center; gap: 12px; color: #9ca3af; font-size: 15px; }
+
+        /* ---------------------------------------------------- */
+        /* MODALS (CONFIRM & PIN) */
+        /* ---------------------------------------------------- */
+        .modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
+        .bottom-sheet { background: #ffffff; width: 100%; border-radius: 28px 28px 0 0; padding: 20px; text-align: center; position: relative; animation: slideUp 0.25s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .sheet-handle { width: 36px; height: 4px; background: #e5e7eb; border-radius: 4px; margin: 0 auto 15px; }
+        .info-data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+        .info-data-row:last-of-type { border-bottom: none; }
+        .info-label { color: #6b7280; text-align: left; }
+        .info-val { text-align: right; font-weight: 600; color: #111827; }
+        .info-val-purple { color: var(--cbe-purple); font-weight: 700; font-size: 22px; }
+
+        .modal-btn-group { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-modal-cancel { flex: 1; background: #fee2e2; color: #dc2626; border: none; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        .btn-modal-confirm { flex: 1; background: var(--cbe-purple); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+
+        .close-circle-btn { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; border-radius: 50%; background: var(--cbe-purple); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 14px; }
+
+        /* ---------------------------------------------------- */
+        /* SCREEN: CBE LOADING SPINNER COMPONENTS */
+        /* ---------------------------------------------------- */
+        #screen-loading {
+            background: rgba(18, 24, 36, 0.75);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cbe-spinner {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            animation: rotate 2.8s linear infinite;
+        }
+
+        .cbe-spinner .dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px;
+            border-radius: 50%;
+            background: #CFCFCF;
+            transform: rotate(var(--angle)) translateY(-32px);
+            animation: highlight 2.8s linear infinite;
+            animation-delay: var(--delay);
+        }
+
+        .cbe-spinner .dot:nth-child(1) { --angle:0deg; --delay:0s; }
+        .cbe-spinner .dot:nth-child(2) { --angle:60deg; --delay:.46s; }
+        .cbe-spinner .dot:nth-child(3) { --angle:120deg; --delay:.92s; }
+        .cbe-spinner .dot:nth-child(4) { --angle:180deg; --delay:1.38s; }
+        .cbe-spinner .dot:nth-child(5) { --angle:240deg; --delay:1.84s; }
+        .cbe-spinner .dot:nth-child(6) { --angle:300deg; --delay:2.30s; }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes highlight {
+            0% {
+                background: #FFD54A;
+                transform: rotate(var(--angle)) translateY(-32px) scale(1.25);
+                box-shadow: 0 0 8px rgba(255,213,74,.95);
+            }
+            15% {
+                background: #FFE38C;
+                transform: rotate(var(--angle)) translateY(-32px) scale(1.18);
+            }
+            35% {
+                background: #E9E9E9;
+                transform: rotate(var(--angle)) translateY(-32px) scale(1);
+                box-shadow: none;
+            }
+            60% {
+                background: #CFCFCF;
+                transform: rotate(var(--angle)) translateY(-32px) scale(.92);
+            }
+            100% {
+                background: #CFCFCF;
+                transform: rotate(var(--angle)) translateY(-32px) scale(.85);
+            }
+        }
+
+        .loading-title-text {
+            margin-top: 16px;
+            color: white;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: .5px;
+        }
+
+        .loading-title-text::after {
+            content: "";
+            animation: textDots 1.6s infinite;
+        }
+
+        @keyframes textDots {
+            0% { content: ""; }
+            20% { content: "."; }
+            40% { content: ".."; }
+            60% { content: "..."; }
+            80% { content: "...."; }
+            100% { content: "....."; }
+        }
+
+        /* ---------------------------------------------------- */
+        /* SCREEN 5: SUCCESS SCREEN */
+        /* ---------------------------------------------------- */
+        #screen-success { background: var(--cbe-purple); color: white; padding: 0; }
+        .success-top-bar { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; }
+        .success-card-sheet { background: #ffffff; color: var(--text-dark); border-radius: 28px 28px 0 0; padding: 45px 20px 20px 20px; margin-top: 30px; flex: 1; position: relative; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+        .success-check-badge { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); width: 70px; height: 70px; border-radius: 50%; background: var(--cbe-purple); color: white; display: flex; align-items: center; justify-content: center; font-size: 36px; border: 6px solid #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        
+        .txn-summary-box { background: #f8f9fa; border-radius: 16px; padding: 16px; text-align: left; font-size: 13px; color: #374151; line-height: 1.5; margin: 15px 0; border: 1px solid #e5e7eb; }
+        .txn-qr-img { width: 120px; height: 120px; margin: 10px auto; display: block; border: 1px solid #e5e7eb; padding: 4px; border-radius: 8px; }
+
+        .footer-logo-img { width: 28px; height: 28px; object-fit: contain; }
+
+        .success-actions-row { display: flex; justify-content: center; gap: 25px; margin: 15px 0; font-size: 13px; font-weight: 600; color: #374151; }
+        .success-actions-row div { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+        /* ---------------------------------------------------- */
+        /* SCREEN 6: OFFICIAL RECEIPT */
+        /* ---------------------------------------------------- */
+        #screen-receipt { 
+            --cbe-purple: #7b247d; 
+            --cbe-purple-dark: #5c1b5e;
+            --cbe-purple-light: #f6e8f7;
+
+            background: #ffffff; 
+            padding-bottom: 90px; 
+        }
+        
+        .receipt-header-banner { background: var(--cbe-purple); color: white; padding: 20px 15px; text-align: center; position: relative; }
+        
+        .receipt-back-btn {
+            position: absolute;
+            left: 15px;
+            top: 22px;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            z-index: 5;
+            transition: opacity 0.2s;
+        }
+        .receipt-back-btn:active { opacity: 0.7; }
+
+        .receipt-logo-top { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; position: absolute; left: 45px; top: 14px; display: flex; align-items: center; justify-content: center; }
+        .receipt-logo-img { width: 100%; height: 100%; object-fit: contain; }
+
+        .receipt-body-content { padding: 15px; position: relative; }
+        .receipt-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 10px; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 12px; }
+        .receipt-info-grid h4 { font-size: 11px; font-weight: 700; margin-bottom: 6px; color: #111827; }
+        .receipt-info-grid .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+
+        .receipt-table-box { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; position: relative; }
+        .receipt-table-title { background: #f9fafb; padding: 8px; text-align: center; font-weight: 700; font-size: 12px; border-bottom: 1px solid #e5e7eb; }
+        .r-row { display: flex; justify-content: space-between; padding: 8px 10px; font-size: 11px; border-bottom: 1px solid #f3f4f6; }
+        .r-row:last-child { border-bottom: none; }
+        .r-row.total-bold { background: #f9fafb; font-weight: 700; border-top: 1px solid #e5e7eb; font-size: 12px; }
+
+        /* OFFICIAL STAMP PLACEHOLDER 3 */
+        .receipt-stamp-seal {
+            position: absolute;
+            top: 50%;
+            left: 45%;
+            transform: translate(-50%, -50%) rotate(-12deg);
+            width: 170px;
+            height: 170px;
+            object-fit: contain;
+            opacity: 0.45;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .pdf-fixed-btn-container {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 20;
+            padding: 0 15px;
+        }
+
+        .pdf-fixed-btn { 
+            width: 70%;
+            max-width: 260px;
+            background: var(--cbe-purple); 
+            color: white; 
+            border: none; 
+            padding: 14px 20px; 
+            font-size: 15px; 
+            font-weight: 700; 
+            border-radius: 99px;
+            cursor: pointer; 
+            text-align: center; 
+            box-shadow: 0 6px 16px rgba(123, 36, 125, 0.35);
+            transition: transform 0.1s, background 0.2s;
+        }
+        .pdf-fixed-btn:active {
+            transform: scale(0.97);
+            background: var(--cbe-purple-dark);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- ==================================================== -->
+        <!-- SCREEN 1: LOGIN -->
+        <!-- ==================================================== -->
+        <div id="screen-login" class="screen">
+            <div class="top-navbar">
+                <div class="icon-circle-btn"><i class="far fa-bell"></i></div>
+                <div class="lang-pill">English <i class="fas fa-chevron-down" style="font-size: 10px;"></i></div>
+                <div class="icon-circle-btn"><i class="fas fa-th-large"></i></div>
+            </div>
+
+            <div class="login-body">
+                <!-- PLACEHOLDER 1: LOGIN PAGE CBE LOGO -->
+                <div class="cbe-emblem">
+                    <img src="assets/images/cbe-logo.png" alt="CBE Logo" class="cbe-emblem-img">
+                </div>
+
+                <div class="brand-amharic">የኢትዮጵያ ንግድ ባንክ</div>
+                <div class="brand-english">COMMERCIAL BANK OF ETHIOPIA</div>
+                <div class="welcome-text">Welcome back</div>
+
+                <div class="pin-box" id="login-pin-box" onclick="activateLoginNumpad()">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="login-pin-input" placeholder="PIN" readonly>
+                </div>
+
+                <button class="biometrics-btn" onclick="triggerBiometricMock()"><i class="fas fa-fingerprint"></i></button>
+                <div class="biometrics-label">USE BIOMETRICS</div>
+
+                <button class="gold-btn" id="login-submit-btn">Login <i class="fas fa-arrow-right"></i></button>
+            </div>
+
+            <div class="login-footer-text">© Commercial Bank of Ethiopia</div>
+
+            <div class="inline-numpad hidden" id="login-numpad-drawer">
+                <button class="numpad-btn" onclick="pressLoginKey('1')">1</button>
+                <button class="numpad-btn" onclick="pressLoginKey('2')">2</button>
+                <button class="numpad-btn" onclick="pressLoginKey('3')">3</button>
+                <button class="numpad-btn" onclick="pressLoginKey('4')">4</button>
+                <button class="numpad-btn" onclick="pressLoginKey('5')">5</button>
+                <button class="numpad-btn" onclick="pressLoginKey('6')">6</button>
+                <button class="numpad-btn" onclick="pressLoginKey('7')">7</button>
+                <button class="numpad-btn" onclick="pressLoginKey('8')">8</button>
+                <button class="numpad-btn" onclick="pressLoginKey('9')">9</button>
+                <button class="numpad-btn backspace" onclick="pressLoginKey('del')"><i class="fas fa-backspace"></i></button>
+                <button class="numpad-btn" onclick="pressLoginKey('0')">0</button>
+                <button class="numpad-btn confirm" onclick="pressLoginKey('ok')"><i class="fas fa-check"></i></button>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- SCREEN 2: DASHBOARD -->
+        <!-- ==================================================== -->
+        <div id="screen-dashboard" class="screen hidden">
+            <div class="dash-header-bg">
+                <div class="dash-nav">
+                    <div class="dash-user-info">
+                        <i class="fas fa-th-large"></i>
+                        <span>Hello,<br><strong style="font-size:16px;">Dagmawi</strong></span>
+                    </div>
+                    <div class="dash-right-tools">
+                        <div class="lang-pill" style="padding:4px 10px; background:rgba(255,255,255,0.15); color:white; border:none;">English <i class="fas fa-chevron-down"></i></div>
+                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTEGRATED BANNER -->
+            <div class="banner-container-wrapper">
+                <div class="banner">
+                    <!-- PLACEHOLDER 2: BANNER BACKGROUND IMAGE -->
+                    <img src="assets/images/banner-bg.png" alt="Banner Background" class="banner-bg-img">
+
+                    <!-- PLACEHOLDER 1: DASHBOARD BANNER CBE LOGO -->
+                    <div class="logo">
+                        <img src="assets/images/cbe-logo.png" alt="CBE Logo" class="banner-logo-img">
+                    </div>
+                    <div class="title">
+                        Commercial Bank of Ethiopia
+                    </div>
+                    <div class="subtitle">
+                        The bank you can always rely on!
+                    </div>
+                    <div class="balance" id="dash-balance-display">
+                        ****** <span>ETB</span>
+                    </div>
+                    <div class="eye" id="balance-toggle-btn" onclick="toggleBalanceVisibility()">
+                        👁️
+                    </div>
+                    <div class="account">
+                        Saving Account 1 **** 6577
+                    </div>
+                    <div class="chip"></div>
+                    <div class="date">
+                        29 Jul 2026 • 11:36 PM
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions-bar">
+                <div class="qa-item"><div class="qa-icon-box"><i class="fas fa-hand-holding-usd"></i></div>Cash Out</div>
+                <div class="qa-item"><div class="qa-icon-box"><i class="fas fa-receipt"></i></div>Mini Statement</div>
+                <div class="qa-item"><div class="qa-icon-box"><i class="far fa-credit-card"></i></div>Cards</div>
+                <div class="qa-item"><div class="qa-icon-box"><i class="fas fa-code-branch"></i></div>Bill Share</div>
+            </div>
+
+            <div class="dash-grid-container">
+                <div class="grid-card" onclick="goToScreen('screen-transfer-1')">
+                    <div class="grid-card-icon" style="background:#fee2e2; color:#ef4444;"><i class="fas fa-arrow-up-right-from-square"></i></div>
+                    <div class="grid-card-title">CBE Transfer</div>
+                    <div class="grid-card-sub">Send Money</div>
+                </div>
+                <div class="grid-card">
+                    <div class="grid-card-icon" style="background:#dcfce7; color:#22c55e;"><i class="fas fa-arrow-down"></i></div>
+                    <div class="grid-card-title">Receive</div>
+                    <div class="grid-card-sub">Get Paid</div>
+                </div>
+                <div class="grid-card">
+                    <div class="grid-card-icon" style="background:var(--cbe-purple-light); color:var(--cbe-purple);"><i class="fas fa-phone"></i></div>
+                    <div class="grid-card-title">Airtime</div>
+                    <div class="grid-card-sub">Top up Mobile</div>
+                </div>
+                <div class="grid-card">
+                    <div class="grid-card-icon" style="background:var(--cbe-purple-light); color:var(--cbe-purple);"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="grid-card-title">Other Transfers</div>
+                    <div class="grid-card-sub">Local Banks</div>
+                </div>
+                <div class="grid-card">
+                    <div class="grid-card-icon" style="background:var(--cbe-purple-light); color:var(--cbe-purple);"><i class="fas fa-wallet"></i></div>
+                    <div class="grid-card-title">CBEBirr</div>
+                    <div class="grid-card-sub">Wallet Service</div>
+                </div>
+                <div class="grid-card">
+                    <div class="grid-card-icon" style="background:var(--cbe-purple-light); color:var(--cbe-purple);"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="grid-card-title">Bills & Utilities</div>
+                    <div class="grid-card-sub">Pay Services</div>
+                </div>
+                <div class="grid-card">
+                    <div class="grid-card-icon" style="background:var(--cbe-purple-light); color:var(--cbe-purple);"><i class="fas fa-gas-pump"></i></div>
+                    <div class="grid-card-title">Fuel Payment</div>
+                    <div class="grid-card-sub">Station Pay</div>
+                </div>
+                <div class="grid-card">
+                    <div class="grid-card-icon" style="background:var(--cbe-purple-light); color:var(--cbe-purple);"><i class="fas fa-hand-holding-heart"></i></div>
+                    <div class="grid-card-title">Donation</div>
+                    <div class="grid-card-sub">Charity Fund</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GLOBAL ANCHORED FLOATING SCAN BUTTON -->
+        <button class="floating-scan-btn hidden" id="app-floating-scan" onclick="goToScreen('screen-transfer-1')"><i class="fas fa-qrcode"></i> Scan QR</button>
+
+        <!-- GLOBAL ANCHORED BOTTOM NAVIGATION BAR -->
+        <div class="bottom-nav-bar hidden" id="app-bottom-nav">
+            <div class="nav-tab active" onclick="goToScreen('screen-dashboard')"><i class="fas fa-home"></i> Home</div>
+            <div class="nav-tab" onclick="goToScreen('screen-transfer-1')"><i class="fas fa-university"></i> Services</div>
+            <div class="nav-tab"><i class="fas fa-cog"></i> Settings</div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- SCREEN 3: CBE TRANSFER STEP 1 -->
+        <!-- ==================================================== -->
+        <div id="screen-transfer-1" class="screen hidden">
+            <div class="purple-header-bar">
+                <i class="fas fa-chevron-left" onclick="goToScreen('screen-dashboard')"></i>
+                <h2>CBE Transfer</h2>
+            </div>
+
+            <div class="transfer-body">
+                <div class="card-from-account">
+                    <span style="font-size:12px; opacity:0.8;">From Account</span>
+                    <strong style="font-size:15px;">Saving Account - 1********6577</strong>
+                    <span style="font-size:12px; opacity:0.6;">•••••• <i class="far fa-eye-slash"></i></span>
+                </div>
+
+                <div class="input-pill-field">
+                    <i class="fas fa-university left-icon"></i>
+                    <input type="text" id="transfer-acc-input" placeholder="Account Number">
+                    <i class="fas fa-qrcode right-icon"></i>
+                </div>
+
+                <div class="input-pill-field">
+                    <i class="fas fa-wallet left-icon"></i>
+                    <input type="number" id="transfer-amt-input" placeholder="Amount*">
+                    <i class="fas fa-calculator right-icon"></i>
+                </div>
+
+                <div class="input-pill-field" style="background:transparent; box-shadow:none;">
+                    <i class="fas fa-plus-circle left-icon"></i>
+                    <input type="text" placeholder="Add remark  *Default: MB transfer">
+                </div>
+
+                <button class="purple-btn" id="btn-transfer-step1-continue">Continue</button>
+
+                <div class="recent-transfers-box">
+                    <div class="tabs-header">
+                        <div class="tab-item active">Recent Transfers</div>
+                        <div class="tab-item">Beneficiaries</div>
+                    </div>
+
+                    <div id="recent-transfers-list">
+                        <!-- List populated dynamically via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- SCREEN 4: CBE TRANSFER STEP 2 -->
+        <!-- ==================================================== -->
+        <div id="screen-transfer-2" class="screen hidden">
+            <div class="purple-header-bar">
+                <i class="fas fa-chevron-left" onclick="goToScreen('screen-transfer-1')"></i>
+                <h2>Transfer</h2>
+            </div>
+
+            <div class="transfer-body">
+                <div style="background: var(--cbe-purple); color: white; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between;">
+                    <div>
+                        <span style="font-size:11px; opacity:0.8;">Transfer to</span><br>
+                        <strong style="font-size:13px;">Account holder</strong><br>
+                        <span style="font-size:11px; opacity:0.8;">Account Number</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <br>
+                        <strong style="font-size:14px;" id="confirm-recipient-name">Belachew Admasu Seresa</strong><br>
+                        <span style="font-size:13px;" id="confirm-recipient-acc">1000588801277</span>
+                    </div>
+                </div>
+
+                <div class="card-from-account">
+                    <span style="font-size:12px; opacity:0.8;">From Account</span>
+                    <strong style="font-size:15px;">Saving Account - 1********6577</strong>
+                    <span style="font-size:12px; opacity:0.6;">•••••• <i class="far fa-eye-slash"></i></span>
+                </div>
+
+                <div class="input-pill-field">
+                    <i class="fas fa-wallet left-icon"></i>
+                    <input type="number" id="transfer-amt-final" value="10">
+                    <i class="fas fa-calculator right-icon"></i>
+                </div>
+
+                <div class="input-pill-field" style="background:transparent; box-shadow:none;">
+                    <i class="fas fa-plus-circle left-icon"></i>
+                    <input type="text" placeholder="Add remark">
+                </div>
+
+                <button class="purple-btn" id="btn-open-confirm-sheet">Transfer</button>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- MODAL 1: CONFIRMATION BOTTOM SHEET -->
+        <!-- ==================================================== -->
+        <div class="modal-overlay hidden" id="modal-confirm-sheet">
+            <div class="bottom-sheet">
+                <div class="sheet-handle"></div>
+                <h3 style="font-size:18px; font-weight:700; margin-bottom:15px; color:#111827;">Please Confirm</h3>
+                
+                <div class="info-data-row">
+                    <div class="info-label">From</div>
+                    <div class="info-val">Dagmawi Adam Aemro<br><span style="font-size:12px; color:#6b7280; font-weight:normal;">1********6577</span></div>
+                </div>
+                <div class="info-data-row">
+                    <div class="info-label">To</div>
+                    <div class="info-val"><span id="sheet-recipient-name">Belachew Admasu Seresa</span><br><span style="font-size:12px; color:#6b7280; font-weight:normal;" id="sheet-recipient-acc">1********1277</span></div>
+                </div>
+                <div class="info-data-row" style="align-items:center;">
+                    <div class="info-label">Total Amount</div>
+                    <div class="info-val info-val-purple"><span id="sheet-confirm-amt">10.00</span> ETB</div>
+                </div>
+
+                <div class="modal-btn-group">
+                    <button class="btn-modal-cancel" onclick="toggleModal('modal-confirm-sheet', false)">Cancel</button>
+                    <button class="btn-modal-confirm" id="btn-proceed-to-pin">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- MODAL 2: TRANSACTION PIN ENTRY SHEET -->
+        <!-- ==================================================== -->
+        <div class="modal-overlay hidden" id="modal-pin-sheet">
+            <div class="bottom-sheet" style="padding-top:25px;">
+                <button class="close-circle-btn" onclick="toggleModal('modal-pin-sheet', false)"><i class="fas fa-times"></i></button>
+                <h3 style="font-size:16px; font-weight:700; margin-bottom:15px; color:#111827;">Enter your PIN to confirm</h3>
+
+                <div class="pin-box active-focused" style="margin-bottom:15px;">
+                    <i class="fas fa-lock" style="color:var(--cbe-purple);"></i>
+                    <input type="password" id="txn-pin-input" placeholder="PIN" readonly>
+                </div>
+
+                <div class="inline-numpad" style="box-shadow:none; padding:0; margin-bottom:15px;">
+                    <button class="numpad-btn" onclick="pressTxnPinKey('1')">1</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('2')">2</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('3')">3</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('4')">4</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('5')">5</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('6')">6</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('7')">7</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('8')">8</button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('9')">9</button>
+                    <button class="numpad-btn backspace" onclick="pressTxnPinKey('del')"><i class="fas fa-backspace"></i></button>
+                    <button class="numpad-btn" onclick="pressTxnPinKey('0')">0</button>
+                    <button class="numpad-btn confirm" onclick="pressTxnPinKey('ok')"><i class="fas fa-check"></i></button>
+                </div>
+
+                <button class="purple-btn" onclick="executeTransaction()">Transfer</button>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- SCREEN: ANIMATED LOADING SPINNER -->
+        <!-- ==================================================== -->
+        <div id="screen-loading" class="screen hidden">
+            <div class="loader-container">
+                <div class="cbe-spinner">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <div class="loading-title-text">
+                    Loading
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- SCREEN 5: SUCCESS / CONFIRMATION RESULT -->
+        <!-- ==================================================== -->
+        <div id="screen-success" class="screen hidden">
+            <div class="success-top-bar">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-shield-alt" style="font-size:24px;"></i>
+                    <div>
+                        <strong style="font-size:18px;">Thank you</strong><br>
+                        <span style="font-size:12px; opacity:0.8;">Success</span>
+                    </div>
+                </div>
+                <i class="fas fa-expand" style="font-size:18px; cursor:pointer;"></i>
+            </div>
+
+            <div class="success-card-sheet">
+                <div class="success-check-badge"><i class="fas fa-check"></i></div>
+                
+                <h3 style="font-size:16px; color:#111827; font-weight:600; margin-top:10px;">Transaction Completed Successfully!</h3>
+
+                <div class="txn-summary-box">
+                    <strong style="display:block; margin-bottom:6px; color:#6b7280; font-size:12px;">Transaction Summary</strong>
+                    ETB <span id="succ-amt">5.00</span> has been debited from <strong>Dagmawi Adam Aemro</strong> ETB-6577 for <strong id="succ-recipient">Sofiya Bediru Ahmed</strong> ETB-4297 on <strong>Jul 30, 2026 01:00 AM</strong> with transaction ID: <strong id="succ-txnid">FT2621147T4J</strong>. Reason: Mobile Banking Transfer
+                    <br><br>
+                    Total Amount Debited: <span id="succ-total">ETB5.61</span> with Service Charge of ETB0.50, VAT (15%) of ETB0.08 and Disaster Recovery (5%) of ETB0.03.
+                </div>
+
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=FT2621147T4J" class="txn-qr-img" alt="QR Code">
+
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin:10px 0;">
+                    <!-- PLACEHOLDER 1: SUCCESS PAGE FOOTER CBE LOGO -->
+                    <img src="assets/images/cbe-logo.png" alt="CBE Logo" class="footer-logo-img">
+                    <div style="text-align:left;">
+                        <strong style="font-size:12px; display:block; color:#111827;">Commercial Bank of Ethiopia</strong>
+                        <span style="font-size:10px; color:#6b7280;">The bank you can always rely on!</span>
+                    </div>
+                </div>
+
+                <div class="success-actions-row">
+                    <div onclick="goToScreen('screen-receipt')"><i class="fas fa-receipt"></i> Receipt</div>
+                    <div onclick="alert('Screenshot saved!')"><i class="fas fa-camera"></i> Screenshot</div>
+                    <div onclick="alert('Share receipt link')"><i class="fas fa-share-alt"></i> Share</div>
+                </div>
+
+                <button class="purple-btn" style="background:#f3f4f6; color:#374151;" onclick="goToScreen('screen-dashboard')">Close</button>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- SCREEN 6: OFFICIAL RECEIPT -->
+        <!-- ==================================================== -->
+        <div id="screen-receipt" class="screen hidden">
+            <div class="receipt-header-banner">
+                <i class="fas fa-arrow-left receipt-back-btn" onclick="goToScreen('screen-dashboard')" title="Back to Dashboard"></i>
+                
+                <!-- PLACEHOLDER 1: RECEIPT PAGE HEADER CBE LOGO -->
+                <div class="receipt-logo-top">
+                    <img src="assets/images/cbe-logo.png" alt="CBE Logo" class="receipt-logo-img">
+                </div>
+
+                <h2 style="font-size:16px;">Commercial Bank of Ethiopia</h2>
+                <p style="font-size:12px; opacity:0.9;">Customer Receipt</p>
+            </div>
+
+            <div class="receipt-body-content">
+                <div class="receipt-info-grid">
+                    <div>
+                        <h4>Company Address & Other Information</h4>
+                        <div class="row"><span>Country:</span> <span>Ethiopia</span></div>
+                        <div class="row"><span>City:</span> <span>Addis Ababa</span></div>
+                        <div class="row"><span>Address:</span> <span>Ras Desta Damtew St</span></div>
+                        <div class="row"><span>Postal code:</span> <span>255</span></div>
+                        <div class="row"><span>SWIFT Code:</span> <span>CBETETAA</span></div>
+                        <div class="row"><span>TIN:</span> <span>0000006966</span></div>
+                        <div class="row"><span>VAT Receipt No:</span> <span id="rcpt-vat-no">FT2621147T4J</span></div>
+                    </div>
+                    <div>
+                        <h4>Customer Information</h4>
+                        <div class="row"><span>Customer Name:</span> <span>Dagmawi Adam Aemro</span></div>
+                        <div class="row"><span>Region:</span> <span>-</span></div>
+                        <div class="row"><span>City:</span> <span>-</span></div>
+                        <div class="row"><span>Branch:</span> <span>-</span></div>
+                    </div>
+                </div>
+
+                <div class="receipt-table-box">
+                    <!-- PLACEHOLDER 3: OFFICIAL STAMP IMAGE -->
+                    <img src="assets/images/official-stamp.png" alt="Official Stamp" class="receipt-stamp-seal">
+
+                    <div class="receipt-table-title">Payment / Transaction Informations</div>
+                    <div class="r-row"><span>Payer:</span> <strong>Dagmawi Adam Aemro</strong></div>
+                    <div class="r-row"><span>Account:</span> <span>1****6577</span></div>
+                    <div class="r-row"><span>Receiver:</span> <strong id="rcpt-receiver">Sofiya Bediru Ahmed</strong></div>
+                    <div class="r-row"><span>Account:</span> <span>1****4297</span></div>
+                    <div class="r-row"><span>Payment Date & Time:</span> <span>Jul 30, 2026, 01:00 AM</span></div>
+                    <div class="r-row"><span>Reference No.:</span> <span id="rcpt-ref-no">FT2621147T4J</span></div>
+                    <div class="r-row"><span>Reason:</span> <span>Mobile Banking Transfer</span></div>
+                    <div class="r-row"><span>Transferred Amount:</span> <strong id="rcpt-amount">5.00 ETB</strong></div>
+                    <div class="r-row"><span>Service Charge (incl. VAT & Disaster Rec):</span> <span>0.61 ETB</span></div>
+                    <div class="r-row total-bold">
+                        <span>Total amount debited:</span>
+                        <span id="rcpt-total">5.61 ETB</span>
+                    </div>
+                </div>
+
+                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:10px; text-align:center; margin:12px 0;">
+                    <strong style="font-size:11px; display:block; color:#374151;">Amount in Word:</strong>
+                    <span style="font-size:12px; color:#111827;">Five ETB and Sixty One cents</span>
+                </div>
+
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=FT2621147T4J" style="width:80px; height:80px; display:block; margin:0 auto;" alt="QR">
+            </div>
+
+            <div class="pdf-fixed-btn-container">
+                <button class="pdf-fixed-btn" onclick="alert('Downloading Receipt PDF...')">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================== -->
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <!-- ==================================================== -->
+    <script>
+        const appState = {
+            user: {
+                name: "Dagmawi Adam Aemro",
+                balance: 5000.00,
+                account: "1********6577"
+            },
+            recentTransfers: [
+                { name: "Belachew Admasu Seresa", account: "1000588801277", masked: "1********1277", initials: "BA" },
+                { name: "Samuel Teshome Tefera", account: "1000199881066", masked: "1********1066", initials: "ST" },
+                { name: "Kilnesh Asegid Kassa", account: "1000244550242", masked: "1********0242", initials: "KA" },
+                { name: "Lidiya Zegeye Werede", account: "1000311225418", masked: "1********5418", initials: "LZ" }
+            ],
+            activeTransfer: {
+                recipientName: "Belachew Admasu Seresa",
+                recipientAccount: "1000588801277",
+                amount: 10.00
+            }
+        };
+
+        let loginPinBuffer = [];
+        let txnPinBuffer = [];
+
+        function goToScreen(screenId) {
+            if (screenId !== 'screen-loading') {
+                document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            }
+            
+            const target = document.getElementById(screenId);
+            if(target) target.classList.remove('hidden');
+
+            const bNav = document.getElementById('app-bottom-nav');
+            const fScan = document.getElementById('app-floating-scan');
+            if(screenId === 'screen-dashboard') {
+                bNav.classList.remove('hidden');
+                fScan.classList.remove('hidden');
+            } else {
+                bNav.classList.add('hidden');
+                fScan.classList.add('hidden');
+            }
+
+            toggleModal('modal-confirm-sheet', false);
+            toggleModal('modal-pin-sheet', false);
+        }
+
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if(show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function activateLoginNumpad() {
+            document.getElementById('login-pin-box').classList.add('active-focused');
+            document.getElementById('login-numpad-drawer').classList.remove('hidden');
+        }
+
+        function pressLoginKey(key) {
+            if(key === 'del') {
+                loginPinBuffer.pop();
+            } else if(key === 'ok') {
+                loginPinBuffer = [];
+                document.getElementById('login-pin-input').value = '';
+                goToScreen('screen-dashboard');
+                return;
+            } else {
+                if(loginPinBuffer.length < 4) loginPinBuffer.push(key);
+            }
+            document.getElementById('login-pin-input').value = loginPinBuffer.map(() => '•').join('');
+        }
+
+        document.getElementById('login-submit-btn').addEventListener('click', () => {
+            loginPinBuffer = [];
+            document.getElementById('login-pin-input').value = '';
+            goToScreen('screen-dashboard');
+        });
+
+        function triggerBiometricMock() {
+            goToScreen('screen-dashboard');
+        }
+
+        let balanceHidden = true;
+        function toggleBalanceVisibility() {
+            const display = document.getElementById('dash-balance-display');
+            if(balanceHidden) {
+                display.innerHTML = `${appState.user.balance.toFixed(2)} <span>ETB</span>`;
+                balanceHidden = false;
+            } else {
+                display.innerHTML = `****** <span>ETB</span>`;
+                balanceHidden = true;
+            }
+        }
+
+        function renderRecentTransfers() {
+            const listContainer = document.getElementById('recent-transfers-list');
+            listContainer.innerHTML = '';
+            appState.recentTransfers.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'recipient-row';
+                row.onclick = () => selectRecipient(item);
+                row.innerHTML = `
+                    <div class="recipient-avatar">${item.initials}</div>
+                    <div class="recipient-details">
+                        <h5>${item.name}</h5>
+                        <p>${item.masked}</p>
+                    </div>
+                    <div class="recipient-actions">
+                        <i class="far fa-trash-alt" onclick="event.stopPropagation(); alert('Remove from beneficiary?')"></i>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+        renderRecentTransfers();
+
+        function selectRecipient(item) {
+            appState.activeTransfer.recipientName = item.name;
+            appState.activeTransfer.recipientAccount = item.account;
+            document.getElementById('transfer-acc-input').value = item.account;
+        }
+
+        document.getElementById('btn-transfer-step1-continue').addEventListener('click', () => {
+            const acc = document.getElementById('transfer-acc-input').value;
+            const amt = document.getElementById('transfer-amt-input').value;
+
+            if(!acc || !amt) {
+                alert('Please enter account number and amount.');
+                return;
+            }
+
+            appState.activeTransfer.recipientAccount = acc;
+            appState.activeTransfer.amount = parseFloat(amt);
+
+            document.getElementById('confirm-recipient-name').innerText = appState.activeTransfer.recipientName;
+            document.getElementById('confirm-recipient-acc').innerText = acc;
+            document.getElementById('transfer-amt-final').value = amt;
+
+            goToScreen('screen-transfer-2');
+        });
+
+        document.getElementById('btn-open-confirm-sheet').addEventListener('click', () => {
+            const amt = document.getElementById('transfer-amt-final').value;
+            appState.activeTransfer.amount = parseFloat(amt);
+
+            document.getElementById('sheet-recipient-name').innerText = appState.activeTransfer.recipientName;
+            document.getElementById('sheet-recipient-acc').innerText = appState.activeTransfer.recipientAccount.replace(/.(?=.{4})/g, '*');
+            document.getElementById('sheet-confirm-amt').innerText = parseFloat(amt).toFixed(2);
+
+            toggleModal('modal-confirm-sheet', true);
+        });
+
+        document.getElementById('btn-proceed-to-pin').addEventListener('click', () => {
+            toggleModal('modal-confirm-sheet', false);
+            txnPinBuffer = [];
+            document.getElementById('txn-pin-input').value = '';
+            toggleModal('modal-pin-sheet', true);
+        });
+
+        function pressTxnPinKey(key) {
+            if(key === 'del') {
+                txnPinBuffer.pop();
+            } else if(key === 'ok') {
+                executeTransaction();
+                return;
+            } else {
+                if(txnPinBuffer.length < 4) txnPinBuffer.push(key);
+            }
+            document.getElementById('txn-pin-input').value = txnPinBuffer.map(() => '•').join('');
+        }
+
+        function executeTransaction() {
+            const baseAmt = appState.activeTransfer.amount;
+            const serviceCharge = 0.50;
+            const vat = 0.08;
+            const disaster = 0.03;
+            const totalDebit = baseAmt + serviceCharge + vat + disaster;
+
+            const txnId = 'FT' + Date.now().toString().slice(-6) + 'T4J';
+
+            document.getElementById('succ-amt').innerText = baseAmt.toFixed(2);
+            document.getElementById('succ-recipient').innerText = appState.activeTransfer.recipientName;
+            document.getElementById('succ-txnid').innerText = txnId;
+            document.getElementById('succ-total').innerText = 'ETB' + totalDebit.toFixed(2);
+
+            document.getElementById('rcpt-vat-no').innerText = txnId;
+            document.getElementById('rcpt-ref-no').innerText = txnId;
+            document.getElementById('rcpt-receiver').innerText = appState.activeTransfer.recipientName;
+            document.getElementById('rcpt-amount').innerText = baseAmt.toFixed(2) + ' ETB';
+            document.getElementById('rcpt-total').innerText = totalDebit.toFixed(2) + ' ETB';
+
+            toggleModal('modal-pin-sheet', false);
+            goToScreen('screen-loading');
+
+            setTimeout(() => {
+                goToScreen('screen-success');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
