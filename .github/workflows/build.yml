@@ -14,32 +14,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Check and Repair Gradle Wrapper
+      - name: Setup Modern Gradle Wrapper
         run: |
-          if [ ! -f "gradlew" ]; then
-            echo "gradlew not found in root. Checking subdirectories..."
-            # Try to find gradlew if it's nested
-            NESTED_GRADLEW=$(find . -name gradlew | head -n 1)
-            if [ ! -z "$NESTED_GRADLEW" ]; then
-              echo "Found gradlew at $NESTED_GRADLEW. Moving execution context..."
-              cd $(dirname "$NESTED_GRADLEW")
-            else
-              echo "gradlew missing completely. Installing a clean wrapper..."
-              sudo apt-get update && sudo apt-get install -y gradle
-              gradle wrapper
-            fi
-          fi
+          # Download and install Gradle 8.5 binaries locally inside the runner
+          wget -q https://gradle.org
+          sudo unzip -q gradle-8.5-bin.zip -d /opt
+          export PATH=/opt/gradle-8.5/bin:$PATH
+          
+          # Force generate a modern, Java 17-compatible gradle wrapper
+          gradle wrapper --gradle-version 8.5
           chmod +x gradlew
 
       - name: Build Debug APK
-        run: |
-          # Dynamically run the build wherever gradlew lives
-          NESTED_GRADLEW=$(find . -name gradlew | head -n 1)
-          cd $(dirname "$NESTED_GRADLEW")
-          ./gradlew assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4.6.1
         with:
           name: cbe-app-debug-apk
-          path: "**/build/outputs/apk/debug/*-debug.apk"
+          path: "app/build/outputs/apk/debug/app-debug.apk"
